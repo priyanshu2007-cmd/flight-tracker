@@ -24,14 +24,15 @@
 | 11 | Owner: SerpApi key | BLOCKED | Owner signs up at serpapi.com and puts `SERPAPI_API_KEY=...` in `.env` (not chat). Trial needs ~100–400 searches → Starter ($25) recommended; free 250 works with `MAX_BOOKING_LOOKUPS=1` |
 | 12 | GCP project | DONE | `flight-tracker-102924515` created; Gmail API enabled |
 | 13 | Host: GitHub Actions workflow | DONE (code) | .github/workflows/tracker.yml; DB on `data` branch; tests test_actions_workflow_safe_and_hourly, test_require_trial_blocks_checks_before_start; 43 passed |
-| 13b | Owner: `gh auth login`, then create private repo + push + secrets | BLOCKED | gh not logged in on this Mac |
+| 13b | Private repo + push + workflow smoke runs | DONE | https://github.com/priyanshu2007-cmd/flight-tracker (PRIVATE). Runs 40767445829 and 40767535758 (command=summary) succeeded: restore, run, save to `data` branch, stop-check |
+| 13c | Owner: repo secrets SERPAPI_API_KEY, GMAIL_TOKEN_JSON | BLOCKED | `gh secret set SERPAPI_API_KEY` (hidden prompt); token after item 14 |
 | 14 | Gmail OAuth client + consent | BLOCKED | Needs the owner signed in to Cloud Console (create Desktop OAuth client, download JSON to secrets/gmail_client.json) and then run `uv run python -m tracker auth` and click Allow |
 | 15 | Test email verified | NOT_STARTED | after 14 |
 | 16 | At least one source returns real fares | NOT_STARTED | after 11 |
 | 17 | Deploy + start 24 h trial | NOT_STARTED | after 11, 13, 14, 15, 16 |
 
 ## Next recommended task
-Owner: `gh auth login`, SerpApi key, Gmail OAuth client + `tracker auth`. Then follow README "Deploy" (repo, secrets, test-email, trial-start).
+Owner: SerpApi key (`gh secret set SERPAPI_API_KEY`), Gmail OAuth client JSON + `tracker auth`. Then follow README "Deploy" (repo, secrets, test-email, trial-start).
 
 ## Trial state
 Not started.
