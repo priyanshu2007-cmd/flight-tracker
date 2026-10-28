@@ -3,6 +3,7 @@ name: tracker
 on:
   schedule:
     - cron: "3 * * * *"  # hourly; GitHub may delay scheduled runs by several minutes
+    - cron: "45 21,2,7,12,17 * * *"  # status email every 5 h: 03:15, 08:15, 13:15, 18:15, 23:15 IST
   workflow_dispatch:
     inputs:
       command:
@@ -10,7 +11,7 @@ on:
         required: true
         default: check
         type: choice
-        options: [check, "check --dry-run", trial-start, test-email, simulate-drop, summary, flush]
+        options: [check, "check --dry-run", status-email, trial-start, test-email, simulate-drop, summary, flush]
 
 concurrency:
   group: tracker  # never two runs at once; queued runs wait instead of being cancelled
@@ -51,7 +52,7 @@ jobs:
 
       - name: Run tracker
         run: |
-          uv run python -m tracker ${{ github.event.inputs.command || 'check' }}
+          uv run python -m tracker ${{ github.event.schedule == '45 21,2,7,12,17 * * *' && 'status-email' || github.event.inputs.command || 'check' }}
           case "$TRACKER_DB" in *probe.db) uv run python -m tracker summary ;; esac
 
       - name: Save database

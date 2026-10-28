@@ -7,7 +7,7 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 from . import db, mailer, sources
-from .config import DRY_RUN, TARGETS, THRESHOLD_INR
+from .config import DRY_RUN, IST, TARGETS, THRESHOLD_INR
 from .config import DB_PATH
 from .core import Fare, decide, eligible
 
@@ -159,6 +159,19 @@ def summary(con) -> str:
     out.append("Alerts: " + (", ".join(f"{a[0]}/{a[1]}={a[2]}" for a in al) or "none"))
     out.append(f"Threshold: below {mailer.inr(THRESHOLD_INR)} per one-way ticket")
     return "\n".join(out)
+
+
+def status_email(con, dry_run: bool = False) -> dict:
+    """Progress email during a running trial. Reads stored data only (no source searches)."""
+    tr = con.execute("SELECT status FROM trial WHERE id=1").fetchone()
+    if not tr or tr["status"] != "running":
+        return {"status": "skipped", "reason": "no trial running"}
+    now = datetime.now(UTC)
+    when = now.astimezone(IST).strftime("%d %b %H:%M IST")
+    body = summary(con) + "\n\nStatus update only: no fare is below the threshold unless an alert email says so."
+    mailer.queue(con, f"status|{now:%Y%m%d%H}", "-", "status", Decimal(0), None,
+                 f"Flight tracker status: {when}", body)
+    return {"status": "ok", "sent": mailer.flush(con, dry_run=dry_run)}
 
 
 def finish_trial(con, dry_run: bool = False) -> str:

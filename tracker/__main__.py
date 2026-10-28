@@ -79,6 +79,8 @@ def main(argv=None):
     for name in ("pause", "resume", "booked"):
         x = sub.add_parser(name, help=f"{name} a target (A-D) or all")
         x.add_argument("target", choices=["A", "B", "C", "D", "all"])
+    se = sub.add_parser("status-email", help="email a trial progress summary (no searches)")
+    se.add_argument("--dry-run", action="store_true", default=DRY_RUN)
     sub.add_parser("summary")
     sub.add_parser("sources")
     f = sub.add_parser("flush", help="retry pending emails")
@@ -106,6 +108,8 @@ def main(argv=None):
             con.execute("INSERT OR IGNORE INTO target_state (target_id) VALUES (?)", (tid,))
             con.execute(f"UPDATE target_state SET {col}=? WHERE target_id=?", (val, tid))
         print(f"{a.cmd}: {a.target}; active targets: {sorted(db.active_targets(con))}")
+    elif a.cmd == "status-email":
+        print(json.dumps(monitor.status_email(_con(), dry_run=a.dry_run), ensure_ascii=False))
     elif a.cmd == "summary":
         print(monitor.summary(_con()))
     elif a.cmd == "sources":
