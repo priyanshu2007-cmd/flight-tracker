@@ -397,6 +397,7 @@ def test_actions_workflow_safe_and_hourly():
     assert "${{ secrets.SERPAPI_API_KEY }}" in wf and "secrets.GMAIL_TOKEN_JSON" in wf  # secrets only via store
     assert "Trial: completed" in wf and "gh workflow disable" in wf  # schedule stops after the trial
     assert "git show origin/data:tracker.db" in wf and "wal_checkpoint" in wf  # history persists between runs
+    assert "upload-artifact" in wf and "retention-days: 30" in wf  # point-in-time backups
 
 
 def test_require_trial_blocks_checks_before_start(tmp_path, monkeypatch):

@@ -65,6 +65,14 @@ jobs:
           git -c user.name=tracker -c user.email=tracker@users.noreply.github.com commit -qm "db $(date -u +%FT%TZ)"
           git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" data
 
+      - name: Backup database
+        if: always() && hashFiles('data/tracker.db') != '' && !contains(github.event.inputs.command, 'dry-run')
+        uses: actions/upload-artifact@v4
+        with:
+          name: tracker-db-${{ github.run_id }}
+          path: data/tracker.db
+          retention-days: 30  # the data branch keeps only the latest copy; these keep a month of snapshots
+
       - name: Stop schedule after trial
         if: always()
         run: |
