@@ -50,7 +50,9 @@ jobs:
           [ -n "$GMAIL_TOKEN_JSON" ] && printf '%s' "$GMAIL_TOKEN_JSON" > "$GMAIL_TOKEN_FILE" || echo "no Gmail token secret"
 
       - name: Run tracker
-        run: uv run python -m tracker ${{ github.event.inputs.command || 'check' }}
+        run: |
+          uv run python -m tracker ${{ github.event.inputs.command || 'check' }}
+          case "$TRACKER_DB" in *probe.db) uv run python -m tracker summary ;; esac
 
       - name: Save database
         if: always()
