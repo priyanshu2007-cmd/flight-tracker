@@ -21,18 +21,20 @@
 | 8 | Scheduler + 24 h trial lifecycle + pause/booked | DONE (code) | deploy/flight-tracker.{service,timer}; monitor.start_trial/finish_trial |
 | 9 | Tests | DONE | `uv run pytest -q` → 43 passed (2026-10-29) |
 | 10 | Live dry-run from Mac | DONE | `python -m tracker check --dry-run` → run ok, 0 fares; statuses recorded: SerpApi requires-authorization, Google/Jina blocked 403, MMT/ixigo/Skyscanner robots-blocked, Cleartrip unsupported |
-| 11 | SerpApi key (free plan, 250/mo) | DONE | account created by owner; MAX_BOOKING_LOOKUPS=1 in workflow |
+| 11 | SerpApi key (free plan, 250/mo) | DONE | owner rotated key 2026-10-29 02:52 IST; probe run 40771506362 -> 37 fares; MAX_BOOKING_LOOKUPS=1 in workflow |
 | 12 | GCP project | DONE | `flight-tracker-102924515` created; Gmail API enabled |
 | 13 | Host: GitHub Actions workflow | DONE (code) | .github/workflows/tracker.yml; DB on `data` branch; tests test_actions_workflow_safe_and_hourly, test_require_trial_blocks_checks_before_start; 43 passed |
 | 13b | Private repo + push + workflow smoke runs | DONE | https://github.com/priyanshu2007-cmd/flight-tracker (PRIVATE). Runs 40767445829 and 40767535758 (command=summary) succeeded: restore, run, save to `data` branch, stop-check |
-| 13c | Repo secrets SERPAPI_API_KEY, GMAIL_TOKEN_JSON | DONE | `gh secret list` shows both (2026-10-29). The SerpApi key was pasted in chat once, so rotate it |
+| 13c | Repo secrets SERPAPI_API_KEY, GMAIL_TOKEN_JSON | DONE | `gh secret list` shows both (2026-10-29). Key rotated after chat exposure |
 | 14 | Gmail OAuth client + consent | DONE | project flight-tracker-102924515, Desktop client, test user spec.priyanshu@gmail.com, token in secrets/gmail_token.json (0600, git-ignored) |
+| 14b | Gmail token lifetime | DONE (decision) | Owner chose to keep Testing mode: token expires ~5 Nov 2026 02:35 IST. Publishing needs a public home + privacy URL on an owned domain (not created) |
+| 14c | DB snapshots | DONE | workflow uploads tracker.db artifact per run, 30-day retention |
 | 15 | Test email verified | DONE | `python -m tracker test-email` -> status delivered (message id 1a18455724f09d40), 2026-10-29 02:36 IST |
 | 16 | Real fares from a permitted source | DONE | run 40770119464 (dry-run): 37 fares; lowest A 9,485 / B 9,529 / C 8,986 / D 8,286 INR; Google Flights = verified |
 | 17 | Deploy + start 24 h trial | DONE | run 40770312379 (trial-start) succeeded; DB on data branch has trial row + 30 observations |
 
 ## Next recommended task
-Watch hourly runs (`gh run list -w tracker.yml`). After the trial ends, read the summary email and decide whether to continue (`gh workflow enable tracker.yml`, then `trial-start`) or publish the OAuth app so the Gmail token does not expire after 7 days.
+Watch hourly runs (`gh run list -w tracker.yml`). After the trial ends, read the summary email and decide whether to continue (`gh workflow enable tracker.yml`, then `trial-start`) Gmail token expires ~5 Nov 02:35 IST: re-run `python -m tracker auth` and `gh secret set GMAIL_TOKEN_JSON < secrets/gmail_token.json` to extend.
 
 ## Trial state
 RUNNING. Started 2026-10-28T21:15:12Z (29 Oct 2026 02:45 IST). Ends 2026-10-29T21:15:12Z (30 Oct 2026 02:45 IST). Scheduled checks hourly at :17 via GitHub Actions; on the first run after the end time it emails the summary and disables the workflow.
