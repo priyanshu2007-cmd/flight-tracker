@@ -393,7 +393,7 @@ def test_timestamps_stored_utc(con):
 
 def test_actions_workflow_safe_and_hourly():
     wf = (ROOT / ".github/workflows/tracker.yml").read_text()
-    assert 'cron: "17 * * * *"' in wf and "cancel-in-progress: false" in wf  # hourly, no overlap
+    assert 'cron: "3 * * * *"' in wf and "cancel-in-progress: false" in wf  # hourly, no overlap
     assert "${{ secrets.SERPAPI_API_KEY }}" in wf and "secrets.GMAIL_TOKEN_JSON" in wf  # secrets only via store
     assert "Trial: completed" in wf and "gh workflow disable" in wf  # schedule stops after the trial
     assert "git show origin/data:tracker.db" in wf and "wal_checkpoint" in wf  # history persists between runs

@@ -2,7 +2,7 @@ name: tracker
 
 on:
   schedule:
-    - cron: "17 * * * *"  # hourly; GitHub may delay scheduled runs by several minutes
+    - cron: "3 * * * *"  # hourly; GitHub may delay scheduled runs by several minutes
   workflow_dispatch:
     inputs:
       command:

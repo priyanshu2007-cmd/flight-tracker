@@ -37,4 +37,4 @@
 Watch hourly runs (`gh run list -w tracker.yml`). After the trial ends, read the summary email and decide whether to continue (`gh workflow enable tracker.yml`, then `trial-start`) Gmail token expires ~5 Nov 02:35 IST: re-run `python -m tracker auth` and `gh secret set GMAIL_TOKEN_JSON < secrets/gmail_token.json` to extend.
 
 ## Trial state
-RUNNING. Started 2026-10-28T21:15:12Z (29 Oct 2026 02:45 IST). Ends 2026-10-29T21:15:12Z (30 Oct 2026 02:45 IST). Scheduled checks hourly at :17 via GitHub Actions; on the first run after the end time it emails the summary and disables the workflow.
+RUNNING. Started 2026-10-28T21:15:12Z (29 Oct 2026 02:45 IST). Ends 2026-10-29T21:15:12Z (30 Oct 2026 02:45 IST). Scheduled checks hourly at :03 via GitHub Actions; on the first run after the end time it emails the summary and disables the workflow.

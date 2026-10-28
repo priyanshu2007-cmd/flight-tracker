@@ -49,7 +49,7 @@ with mode 0600. `.env`, `secrets/` and `data/` are git-ignored.
 4. `uv run python -m tracker auth`. The browser shows "Google hasn't verified this app": click Continue and Allow.
 
 ## Deploy (GitHub Actions — chosen host)
-`.github/workflows/tracker.yml` runs hourly at :17 (GitHub may delay scheduled runs). One run at a time
+`.github/workflows/tracker.yml` runs hourly at :03 (GitHub may delay scheduled runs). One run at a time
 (`concurrency`). The SQLite DB lives on the `data` branch: each run restores it, runs, checkpoints the WAL and
 force-pushes a one-commit `data` branch. The DB itself holds the full history, and the repo must be **private**.
 `REQUIRE_TRIAL=1` makes scheduled checks do nothing until you start the trial.
