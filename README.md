@@ -40,6 +40,14 @@ Copy `.env.example` to `.env`. Put `SERPAPI_API_KEY` there by editing the file y
 `secrets/gmail_client.json` is the OAuth client you download. `secrets/gmail_token.json` is written by `auth`
 with mode 0600. `.env`, `secrets/` and `data/` are git-ignored.
 
+## Gmail setup (owner, one time, project `flight-tracker-102924515`)
+1. https://console.cloud.google.com/auth/branding?project=flight-tracker-102924515: app name "flight-tracker",
+   support + contact email spec.priyanshu@gmail.com, audience **External**.
+2. https://console.cloud.google.com/auth/audience?project=flight-tracker-102924515: under Test users, add spec.priyanshu@gmail.com.
+3. https://console.cloud.google.com/auth/clients?project=flight-tracker-102924515: Create client, type **Desktop app**,
+   then download the JSON and save it as `secrets/gmail_client.json`.
+4. `uv run python -m tracker auth`. The browser shows "Google hasn't verified this app": click Continue and Allow.
+
 ## Deploy (GitHub Actions — chosen host)
 `.github/workflows/tracker.yml` runs hourly at :17 (GitHub may delay scheduled runs). One run at a time
 (`concurrency`). The SQLite DB lives on the `data` branch: each run restores it, runs, checkpoints the WAL and

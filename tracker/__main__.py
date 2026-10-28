@@ -21,6 +21,9 @@ def _con():
 def cmd_auth(_):
     """Owner-only OAuth consent in a browser; stores the refresh token with 0600 permissions."""
     from google_auth_oauthlib.flow import InstalledAppFlow
+    if not os.path.exists(mailer.CLIENT_FILE):
+        sys.exit(f"Missing {mailer.CLIENT_FILE}. Create a Desktop OAuth client in Google Cloud Console "
+                 "(APIs & Services > Credentials), download its JSON to that path, then rerun. See README 'Gmail setup'.")
     creds = InstalledAppFlow.from_client_secrets_file(mailer.CLIENT_FILE, mailer.SCOPES).run_local_server(port=0)
     os.makedirs(os.path.dirname(mailer.TOKEN_FILE) or ".", exist_ok=True)
     fd = os.open(mailer.TOKEN_FILE, os.O_WRONLY | os.O_TRUNC | os.O_CREAT, 0o600)
