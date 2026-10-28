@@ -1,0 +1,68 @@
+name: tracker
+
+on:
+  schedule:
+    - cron: "17 * * * *"  # hourly; GitHub may delay scheduled runs by several minutes
+  workflow_dispatch:
+    inputs:
+      command:
+        description: "tracker command"
+        required: true
+        default: check
+        type: choice
+        options: [check, trial-start, test-email, simulate-drop, summary, flush]
+
+concurrency:
+  group: tracker  # never two runs at once; queued runs wait instead of being cancelled
+  cancel-in-progress: false
+
+permissions:
+  contents: write  # save the database to the `data` branch
+  actions: write   # disable this workflow when the trial ends
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      TRACKER_DB: data/tracker.db
+      REQUIRE_TRIAL: "1"  # scheduled checks do nothing until trial-start
+      GMAIL_TOKEN_FILE: secrets/gmail_token.json
+      SERPAPI_API_KEY: ${{ secrets.SERPAPI_API_KEY }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --no-dev --frozen
+
+      - name: Restore database
+        run: |
+          mkdir -p data
+          if git fetch -q origin data; then git show origin/data:tracker.db > data/tracker.db; fi
+
+      - name: Write Gmail token
+        env:
+          GMAIL_TOKEN_JSON: ${{ secrets.GMAIL_TOKEN_JSON }}
+        run: |
+          umask 077 && mkdir -p secrets
+          [ -n "$GMAIL_TOKEN_JSON" ] && printf '%s' "$GMAIL_TOKEN_JSON" > "$GMAIL_TOKEN_FILE" || echo "no Gmail token secret"
+
+      - name: Run tracker
+        run: uv run python -m tracker ${{ github.event.inputs.command || 'check' }}
+
+      - name: Save database
+        if: always()
+        run: |
+          [ -f data/tracker.db ] || exit 0
+          uv run python -c "import sqlite3; sqlite3.connect('data/tracker.db').execute('PRAGMA wal_checkpoint(TRUNCATE)')"
+          mkdir -p /tmp/db && cp data/tracker.db /tmp/db/ && cd /tmp/db
+          git init -q -b data && git add tracker.db
+          git -c user.name=tracker -c user.email=tracker@users.noreply.github.com commit -qm "db $(date -u +%FT%TZ)"
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" data
+
+      - name: Stop schedule after trial
+        if: always()
+        run: |
+          if uv run python -m tracker summary | grep -q '^Trial: completed'; then
+            gh workflow disable tracker.yml -R "$GITHUB_REPOSITORY" && echo "trial completed: schedule disabled"
+          fi

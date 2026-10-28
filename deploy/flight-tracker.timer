@@ -1,0 +1,10 @@
+[Unit]
+Description=Run the flight price tracker hourly
+
+[Timer]
+OnCalendar=hourly
+RandomizedDelaySec=300
+Persistent=true
+
+[Install]
+WantedBy=timers.target

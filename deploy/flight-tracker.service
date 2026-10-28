@@ -1,0 +1,9 @@
+[Unit]
+Description=Flight price tracker - one monitoring pass
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/flight-tracker
+EnvironmentFile=%h/flight-tracker/.env
+ExecStart=%h/flight-tracker/.venv/bin/python -m tracker check
+TimeoutStartSec=900
