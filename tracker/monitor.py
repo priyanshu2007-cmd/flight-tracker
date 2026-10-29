@@ -1,6 +1,8 @@
 """One monitoring run: fetch -> filter -> persist -> decide alerts -> send. Plus the 24h trial lifecycle."""
 import fcntl
+import json
 import os
+import time
 import subprocess
 from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
@@ -161,17 +163,60 @@ def summary(con) -> str:
     return "\n".join(out)
 
 
-def status_email(con, dry_run: bool = False) -> dict:
-    """Progress email during a running trial. Reads stored data only (no source searches)."""
+STATUS_ANCHOR = datetime(2026, 10, 29, 8, 15, tzinfo=UTC)  # first status email: 13:45 IST
+STATUS_EVERY = timedelta(hours=2)
+
+
+def status_slot(now: datetime) -> datetime | None:
+    """Most recent status-email slot at or before now (None before the first slot)."""
+    k = (now - STATUS_ANCHOR) // STATUS_EVERY
+    return STATUS_ANCHOR + k * STATUS_EVERY if k >= 0 else None
+
+
+def status_email(con, dry_run: bool = False, now: datetime | None = None) -> dict:
+    """Progress email for the current 2-hour slot, sent once per slot. Reads stored data only."""
     tr = con.execute("SELECT status FROM trial WHERE id=1").fetchone()
-    if not tr or tr["status"] != "running":
-        return {"status": "skipped", "reason": "no trial running"}
-    now = datetime.now(UTC)
-    when = now.astimezone(IST).strftime("%d %b %H:%M IST")
+    slot = status_slot(now or datetime.now(UTC))
+    if not tr or tr["status"] != "running" or slot is None:
+        return {"status": "skipped", "reason": "no trial running or before first slot"}
+    idem = f"status|{slot:%Y%m%dT%H%M}"
+    if con.execute("SELECT 1 FROM alerts WHERE idem_key=?", (idem,)).fetchone():
+        return {"status": "skipped", "reason": "slot already queued"}  # retries happen in run_once's flush
     body = summary(con) + "\n\nStatus update only: no fare is below the threshold unless an alert email says so."
-    mailer.queue(con, f"status|{now:%Y%m%d%H}", "-", "status", Decimal(0), None,
-                 f"Flight tracker status: {when}", body)
+    mailer.queue(con, idem, "-", "status", Decimal(0), None,
+                 f"Flight tracker status: {slot.astimezone(IST):%d %b %H:%M} IST", body)
     return {"status": "ok", "sent": mailer.flush(con, dry_run=dry_run)}
+
+
+def loop(path: str = DB_PATH, minutes: int = 330, dry_run: bool = DRY_RUN, tick: int = 60,
+         sleep=time.sleep, clock=lambda: datetime.now(UTC), **kw) -> dict:
+    """Stay alive up to `minutes`: hourly price check + 2-hourly status email, until the trial ends.
+
+    Runs inside one GitHub Actions job (6 h limit); the workflow chains the next loop.
+    """
+    con = db.connect(path)
+    end, last_check, checks = clock() + timedelta(minutes=minutes), None, 0
+    while True:
+        now = clock()
+        tr = con.execute("SELECT status FROM trial WHERE id=1").fetchone()
+        if not tr or tr["status"] != "running":
+            return {"status": "stopped", "reason": "no running trial", "checks": checks}
+        if last_check is None or now - last_check >= timedelta(hours=1):
+            last_check = now
+            try:
+                r = run_once(path, dry_run=dry_run, **kw)
+                print(json.dumps({"check": r.get("status"), "fares": r.get("fares"), "at": now.isoformat()}), flush=True)
+                checks += 1
+                if r.get("status") == "trial-ended":
+                    return {"status": "trial-ended", "checks": checks}
+            except Exception as e:  # keep looping; run_once already recorded the failed run
+                print(json.dumps({"check": "failed", "error": f"{type(e).__name__}: {str(e)[:150]}"}), flush=True)
+        st = status_email(con, dry_run, now)
+        if st["status"] == "ok":
+            print(json.dumps({"status_email": st["sent"]}), flush=True)
+        if now + timedelta(seconds=tick) >= end:
+            return {"status": "loop-complete", "checks": checks}
+        sleep(tick)
 
 
 def finish_trial(con, dry_run: bool = False) -> str:

@@ -393,11 +393,11 @@ def test_timestamps_stored_utc(con):
 
 def test_actions_workflow_safe_and_hourly():
     wf = (ROOT / ".github/workflows/tracker.yml").read_text()
-    assert 'cron: "3 * * * *"' in wf and "cancel-in-progress: false" in wf  # hourly, no overlap
+    assert "cancel-in-progress: false" in wf and "default: loop" in wf  # no overlap, loop is the default
     assert "${{ secrets.SERPAPI_API_KEY }}" in wf and "secrets.GMAIL_TOKEN_JSON" in wf  # secrets only via store
     assert "Trial: completed" in wf and "gh workflow disable" in wf  # schedule stops after the trial
     assert "git show origin/data:tracker.db" in wf and "wal_checkpoint" in wf  # history persists between runs
-    assert "github.event.schedule == '45 21,2,7,12,17 * * *' && 'status-email'" in wf  # 5-hourly status mail
+    assert "Start next loop" in wf and "steps.loop.outcome == 'success'" in wf  # self-chaining, no crash spin
     assert "upload-artifact" in wf and "retention-days: 30" in wf  # point-in-time backups
 
 
@@ -412,9 +412,30 @@ def test_status_email_only_during_trial_and_once_per_hour(con):
     assert monitor.status_email(con, dry_run=True)["status"] == "skipped"
     monitor.start_trial(con)
     run(con, [fare(price="9000")])
-    r = monitor.status_email(con, dry_run=True)
+    t0 = monitor.STATUS_ANCHOR + timedelta(minutes=1)
+    assert monitor.status_email(con, dry_run=True, now=t0 - timedelta(minutes=5))["status"] == "skipped"  # before 13:45 IST
+    r = monitor.status_email(con, dry_run=True, now=t0)
     assert r["status"] == "ok" and r["sent"][0]["status"] == "dry-run"
-    monitor.status_email(con, dry_run=True)  # same hour: idempotent
-    assert con.execute("SELECT COUNT(*) FROM alerts WHERE kind='status'").fetchone()[0] == 1
-    body = con.execute("SELECT body FROM alerts WHERE kind='status'").fetchone()[0]
+    assert monitor.status_email(con, dry_run=True, now=t0 + timedelta(minutes=90))["status"] == "skipped"  # same slot
+    assert monitor.status_email(con, dry_run=True, now=t0 + timedelta(hours=2))["status"] == "ok"  # next slot, 15:45 IST
+    assert con.execute("SELECT COUNT(*) FROM alerts WHERE kind='status'").fetchone()[0] == 2
+    body = con.execute("SELECT body FROM alerts WHERE kind='status' ORDER BY id").fetchone()[0]
     assert "Target B" in body and "₹9,000" in body
+
+
+def test_loop_runs_hourly_checks_and_stops_with_trial(tmp_path):
+    p = str(tmp_path / "t.db")
+    monitor.start_trial(db.connect(p), hours=24)
+    clock = {"t": monitor.STATUS_ANCHOR + timedelta(minutes=2)}
+    seen = []
+    serp = lambda t: (seen.append(clock["t"]), ("no-results", [], None))[1]
+    r = monitor.loop(p, minutes=130, dry_run=True, tick=60, clock=lambda: clock["t"],
+                     sleep=lambda s: clock.update(t=clock["t"] + timedelta(seconds=s)),
+                     serp=serp, reach=lambda u: ("blocked", [], "x"))
+    assert r["status"] == "loop-complete" and r["checks"] == 3  # minute 0, 60, 120
+    c = db.connect(p)
+    assert c.execute("SELECT COUNT(*) FROM alerts WHERE kind='status'").fetchone()[0] == 2  # 13:45 and 15:45 IST slots
+
+
+def test_loop_exits_without_running_trial(tmp_path):
+    assert monitor.loop(str(tmp_path / "t.db"), minutes=5, dry_run=True)["status"] == "stopped"

@@ -81,6 +81,9 @@ def main(argv=None):
         x.add_argument("target", choices=["A", "B", "C", "D", "all"])
     se = sub.add_parser("status-email", help="email a trial progress summary (no searches)")
     se.add_argument("--dry-run", action="store_true", default=DRY_RUN)
+    lp = sub.add_parser("loop", help="run checks + status emails for up to N minutes (used by the workflow)")
+    lp.add_argument("--minutes", type=int, default=330)
+    lp.add_argument("--dry-run", action="store_true", default=DRY_RUN)
     sub.add_parser("summary")
     sub.add_parser("sources")
     f = sub.add_parser("flush", help="retry pending emails")
@@ -108,6 +111,8 @@ def main(argv=None):
             con.execute("INSERT OR IGNORE INTO target_state (target_id) VALUES (?)", (tid,))
             con.execute(f"UPDATE target_state SET {col}=? WHERE target_id=?", (val, tid))
         print(f"{a.cmd}: {a.target}; active targets: {sorted(db.active_targets(con))}")
+    elif a.cmd == "loop":
+        print(json.dumps(monitor.loop(DB_PATH, a.minutes, a.dry_run), default=str))
     elif a.cmd == "status-email":
         print(json.dumps(monitor.status_email(_con(), dry_run=a.dry_run), ensure_ascii=False))
     elif a.cmd == "summary":

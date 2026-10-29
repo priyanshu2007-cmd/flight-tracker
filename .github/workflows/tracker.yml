@@ -2,16 +2,15 @@ name: tracker
 
 on:
   schedule:
-    - cron: "3 * * * *"  # hourly; GitHub may delay scheduled runs by several minutes
-    - cron: "45 21,2,7,12,17 * * *"  # status email every 5 h: 03:15, 08:15, 13:15, 18:15, 23:15 IST
+    - cron: "7 */6 * * *"  # watchdog only: restarts the loop chain if it ever breaks (GitHub cron is best-effort)
   workflow_dispatch:
     inputs:
       command:
         description: "tracker command"
         required: true
-        default: check
+        default: loop
         type: choice
-        options: [check, "check --dry-run", status-email, trial-start, test-email, simulate-drop, summary, flush]
+        options: [loop, check, "check --dry-run", status-email, trial-start, test-email, simulate-drop, summary, flush]
 
 concurrency:
   group: tracker  # never two runs at once; queued runs wait instead of being cancelled
@@ -24,7 +23,7 @@ permissions:
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 345  # one loop is 330 min; GitHub caps hosted jobs at 360
     env:
       # a dry-run probe uses a throwaway DB so it can never swallow a real alert
       TRACKER_DB: ${{ contains(github.event.inputs.command, 'dry-run') && 'data/probe.db' || 'data/tracker.db' }}
@@ -51,8 +50,9 @@ jobs:
           [ -n "$GMAIL_TOKEN_JSON" ] && printf '%s' "$GMAIL_TOKEN_JSON" > "$GMAIL_TOKEN_FILE" || echo "no Gmail token secret"
 
       - name: Run tracker
+        id: loop
         run: |
-          uv run python -m tracker ${{ github.event.schedule == '45 21,2,7,12,17 * * *' && 'status-email' || github.event.inputs.command || 'check' }}
+          uv run python -m tracker ${{ github.event.inputs.command || 'loop' }}
           case "$TRACKER_DB" in *probe.db) uv run python -m tracker summary ;; esac
 
       - name: Save database
@@ -73,6 +73,15 @@ jobs:
           name: tracker-db-${{ github.run_id }}
           path: data/tracker.db
           retention-days: 30  # the data branch keeps only the latest copy; these keep a month of snapshots
+
+      - name: Start next loop
+        # Chains the next 5.5 h loop (queued behind this job by `concurrency`). Skipped if this loop crashed:
+        # the watchdog cron restarts it, so a failing loop cannot spin.
+        if: steps.loop.outcome == 'success' && (github.event.inputs.command == 'loop' || github.event_name == 'schedule')
+        run: |
+          if uv run python -m tracker summary | grep -q '^Trial: running'; then
+            gh workflow run tracker.yml -R "$GITHUB_REPOSITORY" -f command=loop && echo "next loop queued"
+          fi
 
       - name: Stop schedule after trial
         if: always()
