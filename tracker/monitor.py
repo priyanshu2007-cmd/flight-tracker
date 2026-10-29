@@ -180,7 +180,7 @@ def summary(con) -> str:
     return "\n".join(out)
 
 
-STATUS_ANCHOR = datetime(2026, 10, 29, 8, 25, tzinfo=UTC)  # first status email: 13:55 IST
+STATUS_ANCHOR = datetime(2026, 10, 29, 9, 0, tzinfo=UTC)  # first status email: 14:30 IST, then every 2 h
 STATUS_EVERY = timedelta(hours=2)
 
 
