@@ -163,7 +163,7 @@ def summary(con) -> str:
     return "\n".join(out)
 
 
-STATUS_ANCHOR = datetime(2026, 10, 29, 8, 15, tzinfo=UTC)  # first status email: 13:45 IST
+STATUS_ANCHOR = datetime(2026, 10, 29, 8, 25, tzinfo=UTC)  # first status email: 13:55 IST
 STATUS_EVERY = timedelta(hours=2)
 
 

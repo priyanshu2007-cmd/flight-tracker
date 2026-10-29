@@ -413,11 +413,11 @@ def test_status_email_only_during_trial_and_once_per_hour(con):
     monitor.start_trial(con)
     run(con, [fare(price="9000")])
     t0 = monitor.STATUS_ANCHOR + timedelta(minutes=1)
-    assert monitor.status_email(con, dry_run=True, now=t0 - timedelta(minutes=5))["status"] == "skipped"  # before 13:45 IST
+    assert monitor.status_email(con, dry_run=True, now=t0 - timedelta(minutes=5))["status"] == "skipped"  # before 13:55 IST
     r = monitor.status_email(con, dry_run=True, now=t0)
     assert r["status"] == "ok" and r["sent"][0]["status"] == "dry-run"
     assert monitor.status_email(con, dry_run=True, now=t0 + timedelta(minutes=90))["status"] == "skipped"  # same slot
-    assert monitor.status_email(con, dry_run=True, now=t0 + timedelta(hours=2))["status"] == "ok"  # next slot, 15:45 IST
+    assert monitor.status_email(con, dry_run=True, now=t0 + timedelta(hours=2))["status"] == "ok"  # next slot, 15:55 IST
     assert con.execute("SELECT COUNT(*) FROM alerts WHERE kind='status'").fetchone()[0] == 2
     body = con.execute("SELECT body FROM alerts WHERE kind='status' ORDER BY id").fetchone()[0]
     assert "Target B" in body and "₹9,000" in body
@@ -434,7 +434,7 @@ def test_loop_runs_hourly_checks_and_stops_with_trial(tmp_path):
                      serp=serp, reach=lambda u: ("blocked", [], "x"))
     assert r["status"] == "loop-complete" and r["checks"] == 3  # minute 0, 60, 120
     c = db.connect(p)
-    assert c.execute("SELECT COUNT(*) FROM alerts WHERE kind='status'").fetchone()[0] == 2  # 13:45 and 15:45 IST slots
+    assert c.execute("SELECT COUNT(*) FROM alerts WHERE kind='status'").fetchone()[0] == 2  # 13:55 and 15:55 IST slots
 
 
 def test_loop_exits_without_running_trial(tmp_path):
