@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
-from . import db, mailer, sources
+from . import db, flightpowers, mailer, sources
 from .config import DRY_RUN, IST, TARGETS, THRESHOLD_INR
 from .config import DB_PATH
 from .core import Fare, decide, eligible
@@ -173,6 +173,12 @@ def status_slot(now: datetime) -> datetime | None:
     return STATUS_ANCHOR + k * STATUS_EVERY if k >= 0 else None
 
 
+def status_body(con) -> str:
+    fp = flightpowers.section()
+    return summary(con) + ("\n\n" + fp if fp else "") + \
+        "\n\nStatus update only: no fare is below the threshold unless an alert email says so."
+
+
 def status_email(con, dry_run: bool = False, now: datetime | None = None) -> dict:
     """Progress email for the current 2-hour slot, sent once per slot. Reads stored data only."""
     tr = con.execute("SELECT status FROM trial WHERE id=1").fetchone()
@@ -182,9 +188,8 @@ def status_email(con, dry_run: bool = False, now: datetime | None = None) -> dic
     idem = f"status|{slot:%Y%m%dT%H%M}"
     if con.execute("SELECT 1 FROM alerts WHERE idem_key=?", (idem,)).fetchone():
         return {"status": "skipped", "reason": "slot already queued"}  # retries happen in run_once's flush
-    body = summary(con) + "\n\nStatus update only: no fare is below the threshold unless an alert email says so."
     mailer.queue(con, idem, "-", "status", Decimal(0), None,
-                 f"Flight tracker status: {slot.astimezone(IST):%d %b %H:%M} IST", body)
+                 f"Flight tracker status: {slot.astimezone(IST):%d %b %H:%M} IST", status_body(con))
     return {"status": "ok", "sent": mailer.flush(con, dry_run=dry_run)}
 
 

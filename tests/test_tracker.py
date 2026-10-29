@@ -439,3 +439,22 @@ def test_loop_runs_hourly_checks_and_stops_with_trial(tmp_path):
 
 def test_loop_exits_without_running_trial(tmp_path):
     assert monitor.loop(str(tmp_path / "t.db"), minutes=5, dry_run=True)["status"] == "stopped"
+
+
+def test_flightpowers_section_has_all_rows_and_only_approved_links(tmp_path):
+    from tracker import flightpowers
+    text = flightpowers.section()
+    assert text.count("departs") == 37  # every connector fare is listed
+    assert "NOT refreshed automatically" in text and "NOT included in this data" in text
+    links = [l.strip() for l in text.splitlines() if l.strip().startswith("https://")]
+    assert len(links) == 37 and all(approved_url(l) for l in links)
+    assert "Target A: BLR → LKO, 23 Dec 2026 (departures after 17:00 only)" in text
+    assert "₹8,286  IndiGo, departs 5:20 PM, nonstop" in text and "₹4,850 to ₹8,700" in text
+    assert flightpowers.section(tmp_path / "missing.json") == ""  # no snapshot -> no section
+
+
+def test_status_body_includes_flightpowers_and_does_not_touch_alerts(con):
+    run(con, [fare(price="9000")])
+    body = monitor.status_body(con)
+    assert "FLIGHTPOWERS FARES" in body and "Target B" in body
+    assert con.execute("SELECT COUNT(*) FROM alerts").fetchone()[0] == 0  # display only

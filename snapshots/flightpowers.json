@@ -1,0 +1,335 @@
+{
+ "provider": "FlightPowers (Google Flights fares) via the owner's connector",
+ "captured": "29 Oct 2026, about 14:00 IST",
+ "usage": "4 of 10 free daily searches used on the owner's account (1 search per route/date)",
+ "targets": {
+  "A": {
+   "insights": null,
+   "rows": [
+    [
+     "IndiGo",
+     "5:50 PM",
+     0,
+     "2 hr 30 min",
+     9485,
+     "GjsSCjIwMjYtMTItMjMiHwoDQkxSEgoyMDI2LTEyLTIzGgNMS08qAjZFMgM0NTFqBRIDQkxScgUSA0xLT0IBAUgBmAEC"
+    ],
+    [
+     "IndiGo",
+     "7:30 PM",
+     0,
+     "2 hr 30 min",
+     9485,
+     "GjsSCjIwMjYtMTItMjMiHwoDQkxSEgoyMDI2LTEyLTIzGgNMS08qAjZFMgM5MDNqBRIDQkxScgUSA0xLT0IBAUgBmAEC"
+    ],
+    [
+     "Air India Express",
+     "5:05 PM",
+     0,
+     "2 hr 45 min",
+     10260,
+     "GjwSCjIwMjYtMTItMjMiIAoDQkxSEgoyMDI2LTEyLTIzGgNMS08qAklYMgQxNTQxagUSA0JMUnIFEgNMS09CAQFIAZgBAg"
+    ],
+    [
+     "Air India Express",
+     "9:25 PM",
+     1,
+     "10 hr 45 min",
+     24823,
+     "Gl4SCjIwMjYtMTItMjMiIAoDQkxSEgoyMDI2LTEyLTIzGgNERUwqAklYMgQxMjYwIiAKA0RFTBIKMjAyNi0xMi0yNBoDTEtPKgJJWDIEMTI2M2oFEgNCTFJyBRIDTEtPQgEBSAGYAQI"
+    ],
+    [
+     "Air India Express",
+     "9:25 PM",
+     1,
+     "16 hr 20 min",
+     24823,
+     "Gl4SCjIwMjYtMTItMjMiIAoDQkxSEgoyMDI2LTEyLTIzGgNERUwqAklYMgQxMjYwIiAKA0RFTBIKMjAyNi0xMi0yNBoDTEtPKgJJWDIEMTM5MmoFEgNCTFJyBRIDTEtPQgEBSAGYAQI"
+    ],
+    [
+     "Air India Express",
+     "9:25 PM",
+     1,
+     "19 hr 30 min",
+     25033,
+     "Gl4SCjIwMjYtMTItMjMiIAoDQkxSEgoyMDI2LTEyLTIzGgNERUwqAklYMgQxMjYwIiAKA0RFTBIKMjAyNi0xMi0yNBoDTEtPKgJJWDIEMTM4NWoFEgNCTFJyBRIDTEtPQgEBSAGYAQI"
+    ],
+    [
+     "Emirates, flydubai",
+     "8:20 PM",
+     1,
+     "14 hr 30 min",
+     73104,
+     "GlwSCjIwMjYtMTItMjMiHwoDQkxSEgoyMDI2LTEyLTIzGgNEWEIqAkVLMgM1NjciHwoDRFhCEgoyMDI2LTEyLTI0GgNMS08qAkZaMgM0NDNqBRIDQkxScgUSA0xLT0IBAUgBmAEC"
+    ]
+   ]
+  },
+  "B": {
+   "insights": {
+    "low": 4850,
+    "high": 8700,
+    "level": "high"
+   },
+   "rows": [
+    [
+     "IndiGo",
+     "9:15 AM",
+     1,
+     "5 hr 25 min",
+     9529,
+     "GlwSCjIwMjYtMTItMjQiHwoDQkxSEgoyMDI2LTEyLTI0GgNIWUQqAjZFMgMzMTIiHwoDSFlEEgoyMDI2LTEyLTI0GgNMS08qAjZFMgM0NTNqBRIDQkxScgUSA0xLT0IBAUgBmAEC"
+    ],
+    [
+     "IndiGo",
+     "9:15 AM",
+     1,
+     "10 hr 20 min",
+     9529,
+     "Gl0SCjIwMjYtMTItMjQiHwoDQkxSEgoyMDI2LTEyLTI0GgNIWUQqAjZFMgMzMTIiIAoDSFlEEgoyMDI2LTEyLTI0GgNMS08qAjZFMgQ2MTY3agUSA0JMUnIFEgNMS09CAQFIAZgBAg"
+    ],
+    [
+     "IndiGo",
+     "10:15 AM",
+     1,
+     "4 hr 25 min",
+     9529,
+     "GlwSCjIwMjYtMTItMjQiHwoDQkxSEgoyMDI2LTEyLTI0GgNIWUQqAjZFMgM1MzciHwoDSFlEEgoyMDI2LTEyLTI0GgNMS08qAjZFMgM0NTNqBRIDQkxScgUSA0xLT0IBAUgBmAEC"
+    ],
+    [
+     "IndiGo",
+     "10:15 AM",
+     1,
+     "9 hr 20 min",
+     9529,
+     "Gl0SCjIwMjYtMTItMjQiHwoDQkxSEgoyMDI2LTEyLTI0GgNIWUQqAjZFMgM1MzciIAoDSFlEEgoyMDI2LTEyLTI0GgNMS08qAjZFMgQ2MTY3agUSA0JMUnIFEgNMS09CAQFIAZgBAg"
+    ],
+    [
+     "IndiGo",
+     "11:25 AM",
+     1,
+     "8 hr 10 min",
+     9529,
+     "Gl4SCjIwMjYtMTItMjQiIAoDQkxSEgoyMDI2LTEyLTI0GgNIWUQqAjZFMgQ2MTc4IiAKA0hZRBIKMjAyNi0xMi0yNBoDTEtPKgI2RTIENjE2N2oFEgNCTFJyBRIDTEtPQgEBSAGYAQI"
+    ],
+    [
+     "IndiGo",
+     "1:35 PM",
+     1,
+     "6 hr",
+     9529,
+     "Gl4SCjIwMjYtMTItMjQiIAoDQkxSEgoyMDI2LTEyLTI0GgNIWUQqAjZFMgQ2NDA0IiAKA0hZRBIKMjAyNi0xMi0yNBoDTEtPKgI2RTIENjE2N2oFEgNCTFJyBRIDTEtPQgEBSAGYAQI"
+    ],
+    [
+     "IndiGo",
+     "2:55 PM",
+     1,
+     "4 hr 40 min",
+     9529,
+     "Gl4SCjIwMjYtMTItMjQiIAoDQkxSEgoyMDI2LTEyLTI0GgNIWUQqAjZFMgQ2OTIzIiAKA0hZRBIKMjAyNi0xMi0yNBoDTEtPKgI2RTIENjE2N2oFEgNCTFJyBRIDTEtPQgEBSAGYAQI"
+    ],
+    [
+     "Air India Express",
+     "10:30 AM",
+     0,
+     "2 hr 35 min",
+     9562,
+     "GjwSCjIwMjYtMTItMjQiIAoDQkxSEgoyMDI2LTEyLTI0GgNMS08qAklYMgQyMDE5agUSA0JMUnIFEgNMS09CAQFIAZgBAg"
+    ],
+    [
+     "Air India Express",
+     "5:05 PM",
+     0,
+     "2 hr 45 min",
+     9562,
+     "GjwSCjIwMjYtMTItMjQiIAoDQkxSEgoyMDI2LTEyLTI0GgNMS08qAklYMgQxNTQxagUSA0JMUnIFEgNMS09CAQFIAZgBAg"
+    ],
+    [
+     "Akasa Air",
+     "7:25 AM",
+     0,
+     "2 hr 35 min",
+     10188,
+     "GjwSCjIwMjYtMTItMjQiIAoDQkxSEgoyMDI2LTEyLTI0GgNMS08qAlFQMgQxNTAxagUSA0JMUnIFEgNMS09CAQFIAZgBAg"
+    ]
+   ]
+  },
+  "C": {
+   "insights": {
+    "low": 5200,
+    "high": 8100,
+    "level": "high"
+   },
+   "rows": [
+    [
+     "IndiGo",
+     "5:20 PM",
+     0,
+     "2 hr 25 min",
+     8986,
+     "GjsSCjIwMjctMDEtMDQiHwoDTEtPEgoyMDI3LTAxLTA0GgNCTFIqAjZFMgM0MjdqBRIDTEtPcgUSA0JMUkIBAUgBmAEC"
+    ],
+    [
+     "IndiGo",
+     "3:15 PM",
+     0,
+     "2 hr 35 min",
+     9486,
+     "GjwSCjIwMjctMDEtMDQiIAoDTEtPEgoyMDI3LTAxLTA0GgNCTFIqAjZFMgQ2NTk3agUSA0xLT3IFEgNCTFJCAQFIAZgBAg"
+    ],
+    [
+     "IndiGo",
+     "9:05 PM",
+     0,
+     "2 hr 25 min",
+     9486,
+     "GjsSCjIwMjctMDEtMDQiHwoDTEtPEgoyMDI3LTAxLTA0GgNCTFIqAjZFMgM5MDZqBRIDTEtPcgUSA0JMUkIBAUgBmAEC"
+    ],
+    [
+     "Akasa Air",
+     "10:35 AM",
+     0,
+     "2 hr 40 min",
+     9649,
+     "GjwSCjIwMjctMDEtMDQiIAoDTEtPEgoyMDI3LTAxLTA0GgNCTFIqAlFQMgQxNTAyagUSA0xLT3IFEgNCTFJCAQFIAZgBAg"
+    ],
+    [
+     "Akasa Air",
+     "3:45 PM",
+     0,
+     "2 hr 40 min",
+     9916,
+     "GjwSCjIwMjctMDEtMDQiIAoDTEtPEgoyMDI3LTAxLTA0GgNCTFIqAlFQMgQxNTIyagUSA0xLT3IFEgNCTFJCAQFIAZgBAg"
+    ],
+    [
+     "Air India Express",
+     "8:30 PM",
+     0,
+     "2 hr 30 min",
+     10169,
+     "GjwSCjIwMjctMDEtMDQiIAoDTEtPEgoyMDI3LTAxLTA0GgNCTFIqAklYMgQxNTQyagUSA0xLT3IFEgNCTFJCAQFIAZgBAg"
+    ],
+    [
+     "Air India Express",
+     "1:40 PM",
+     0,
+     "2 hr 40 min",
+     10770,
+     "GjwSCjIwMjctMDEtMDQiIAoDTEtPEgoyMDI3LTAxLTA0GgNCTFIqAklYMgQxNTIwagUSA0xLT3IFEgNCTFJCAQFIAZgBAg"
+    ],
+    [
+     "IndiGo",
+     "7:45 AM",
+     0,
+     "2 hr 40 min",
+     10786,
+     "GjsSCjIwMjctMDEtMDQiHwoDTEtPEgoyMDI3LTAxLTA0GgNCTFIqAjZFMgMzMjVqBRIDTEtPcgUSA0JMUkIBAUgBmAEC"
+    ],
+    [
+     "IndiGo",
+     "10:10 AM",
+     1,
+     "4 hr 35 min",
+     11313,
+     "Gl0SCjIwMjctMDEtMDQiHwoDTEtPEgoyMDI3LTAxLTA0GgNIWUQqAjZFMgMxODEiIAoDSFlEEgoyMDI3LTAxLTA0GgNCTFIqAjZFMgQ2NDA1agUSA0xLT3IFEgNCTFJCAQFIAZgBAg"
+    ],
+    [
+     "IndiGo",
+     "10:10 AM",
+     1,
+     "5 hr 55 min",
+     11313,
+     "GlwSCjIwMjctMDEtMDQiHwoDTEtPEgoyMDI3LTAxLTA0GgNIWUQqAjZFMgMxODEiHwoDSFlEEgoyMDI3LTAxLTA0GgNCTFIqAjZFMgMzMTRqBRIDTEtPcgUSA0JMUkIBAUgBmAEC"
+    ]
+   ]
+  },
+  "D": {
+   "insights": {
+    "low": 5200,
+    "high": 8100,
+    "level": "high"
+   },
+   "rows": [
+    [
+     "IndiGo",
+     "5:20 PM",
+     0,
+     "2 hr 25 min",
+     8286,
+     "GjsSCjIwMjctMDEtMDUiHwoDTEtPEgoyMDI3LTAxLTA1GgNCTFIqAjZFMgM0MjdqBRIDTEtPcgUSA0JMUkIBAUgBmAEC"
+    ],
+    [
+     "IndiGo",
+     "3:15 PM",
+     0,
+     "2 hr 35 min",
+     8586,
+     "GjwSCjIwMjctMDEtMDUiIAoDTEtPEgoyMDI3LTAxLTA1GgNCTFIqAjZFMgQ2NTk3agUSA0xLT3IFEgNCTFJCAQFIAZgBAg"
+    ],
+    [
+     "IndiGo",
+     "9:05 PM",
+     0,
+     "2 hr 25 min",
+     8586,
+     "GjsSCjIwMjctMDEtMDUiHwoDTEtPEgoyMDI3LTAxLTA1GgNCTFIqAjZFMgM5MDZqBRIDTEtPcgUSA0JMUkIBAUgBmAEC"
+    ],
+    [
+     "IndiGo",
+     "10:10 AM",
+     1,
+     "4 hr 35 min",
+     8887,
+     "Gl0SCjIwMjctMDEtMDUiHwoDTEtPEgoyMDI3LTAxLTA1GgNIWUQqAjZFMgMxODEiIAoDSFlEEgoyMDI3LTAxLTA1GgNCTFIqAjZFMgQ2NDA1agUSA0xLT3IFEgNCTFJCAQFIAZgBAg"
+    ],
+    [
+     "IndiGo",
+     "10:10 AM",
+     1,
+     "5 hr 55 min",
+     8887,
+     "GlwSCjIwMjctMDEtMDUiHwoDTEtPEgoyMDI3LTAxLTA1GgNIWUQqAjZFMgMxODEiHwoDSFlEEgoyMDI3LTAxLTA1GgNCTFIqAjZFMgMzMTRqBRIDTEtPcgUSA0JMUkIBAUgBmAEC"
+    ],
+    [
+     "IndiGo",
+     "10:10 AM",
+     1,
+     "9 hr 10 min",
+     8887,
+     "Gl0SCjIwMjctMDEtMDUiHwoDTEtPEgoyMDI3LTAxLTA1GgNIWUQqAjZFMgMxODEiIAoDSFlEEgoyMDI3LTAxLTA1GgNCTFIqAjZFMgQ2NDE3agUSA0xLT3IFEgNCTFJCAQFIAZgBAg"
+    ],
+    [
+     "IndiGo",
+     "10:10 AM",
+     1,
+     "10 hr 45 min",
+     8887,
+     "Gl0SCjIwMjctMDEtMDUiHwoDTEtPEgoyMDI3LTAxLTA1GgNIWUQqAjZFMgMxODEiIAoDSFlEEgoyMDI3LTAxLTA1GgNCTFIqAjZFMgQ2NzgzagUSA0xLT3IFEgNCTFJCAQFIAZgBAg"
+    ],
+    [
+     "IndiGo",
+     "3:20 PM",
+     1,
+     "5 hr 35 min",
+     8887,
+     "Gl0SCjIwMjctMDEtMDUiHwoDTEtPEgoyMDI3LTAxLTA1GgNIWUQqAjZFMgM1MjMiIAoDSFlEEgoyMDI3LTAxLTA1GgNCTFIqAjZFMgQ2NzgzagUSA0xLT3IFEgNCTFJCAQFIAZgBAg"
+    ],
+    [
+     "Akasa Air",
+     "10:35 AM",
+     0,
+     "2 hr 40 min",
+     8907,
+     "GjwSCjIwMjctMDEtMDUiIAoDTEtPEgoyMDI3LTAxLTA1GgNCTFIqAlFQMgQxNTAyagUSA0xLT3IFEgNCTFJCAQFIAZgBAg"
+    ],
+    [
+     "Air India Express",
+     "1:40 PM",
+     0,
+     "2 hr 40 min",
+     8970,
+     "GjwSCjIwMjctMDEtMDUiIAoDTEtPEgoyMDI3LTAxLTA1GgNCTFIqAklYMgQxNTIwagUSA0xLT3IFEgNCTFJCAQFIAZgBAg"
+    ]
+   ]
+  }
+ }
+}
