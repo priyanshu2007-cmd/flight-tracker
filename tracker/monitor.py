@@ -8,10 +8,10 @@ from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
-from . import db, flightpowers, mailer, sources
+from . import db, mailer, sources
 from .config import DRY_RUN, IST, TARGETS, THRESHOLD_INR
 from .config import DB_PATH
-from .core import Fare, decide, eligible
+from .core import Fare, approved_url, decide, eligible
 
 TIMER = "flight-tracker.timer"
 BLOCK_HOURS = 24  # after a block/rate limit, leave that path alone this long (no retry, per Agent Reach docs)
@@ -141,6 +141,28 @@ def start_trial(con, hours: int = 24, systemd: bool = False) -> dict:
     return dict(con.execute("SELECT * FROM trial WHERE id=1").fetchone())
 
 
+def target_line(con, t) -> str:
+    r = con.execute("SELECT COUNT(*) n, COUNT(DISTINCT flight_key) k, MIN(CAST(displayed_inr AS REAL)) lo,"
+                    " MIN(CAST(comparable_inr AS REAL)) clo FROM observations WHERE target_id=?", (t.id,)).fetchone()
+    return (f"Target {t.id} {t.origin}->{t.dest} {t.date}{' after 17:00' if t.depart_after else ''}: "
+            f"{r['n']} observations of {r['k']} flights; lowest displayed {mailer.inr(r['lo'])}; "
+            f"lowest baggage-verified {mailer.inr(r['clo'])}")
+
+
+def lowest_fare_lines(con, t) -> list[str]:
+    """Which flight was the lowest, and a link on an approved site where it was seen."""
+    o = con.execute("SELECT airline, flight_numbers, depart, stops, source, seller, booking_url FROM observations"
+                    " WHERE target_id=? ORDER BY CAST(displayed_inr AS REAL), id DESC LIMIT 1", (t.id,)).fetchone()
+    if not o:
+        return ["  no fares observed yet"]
+    dep = datetime.fromisoformat(o["depart"]).astimezone(IST)
+    stops = "nonstop" if o["stops"] == 0 else f"{o['stops']} stop"
+    lines = [f"  Lowest: {o['airline']} {o['flight_numbers']}, departs {dep:%d %b %H:%M} IST, {stops}, seen on {o['seller'] or o['source']}"]
+    if approved_url(o["booking_url"]):
+        lines.append(f"  Link: {o['booking_url']}")
+    return lines
+
+
 def summary(con) -> str:
     out = []
     tr = con.execute("SELECT * FROM trial WHERE id=1").fetchone()
@@ -148,12 +170,7 @@ def summary(con) -> str:
         out.append(f"Trial: {tr['status']}  {db.ist(tr['started_at'])} -> {db.ist(tr['ends_at'])}")
     runs = con.execute("SELECT status, COUNT(*) FROM runs GROUP BY status").fetchall()
     out.append("Runs: " + (", ".join(f"{r[0]}={r[1]}" for r in runs) or "none"))
-    for t in TARGETS:
-        r = con.execute("SELECT COUNT(*) n, COUNT(DISTINCT flight_key) k, MIN(CAST(displayed_inr AS REAL)) lo,"
-                        " MIN(CAST(comparable_inr AS REAL)) clo FROM observations WHERE target_id=?", (t.id,)).fetchone()
-        out.append(f"Target {t.id} {t.origin}->{t.dest} {t.date}{' after 17:00' if t.depart_after else ''}: "
-                   f"{r['n']} observations of {r['k']} flights; lowest displayed {mailer.inr(r['lo'])}; "
-                   f"lowest baggage-verified {mailer.inr(r['clo'])}")
+    out += [target_line(con, t) for t in TARGETS]
     for s in con.execute("SELECT name, status, last_success, failure_reason FROM sources ORDER BY name"):
         out.append(f"Source {s['name']}: {s['status']} (last success {db.ist(s['last_success'])})"
                    f"{' - ' + s['failure_reason'] if s['failure_reason'] else ''}")
@@ -174,9 +191,8 @@ def status_slot(now: datetime) -> datetime | None:
 
 
 def status_body(con) -> str:
-    fp = flightpowers.section()
-    return summary(con) + ("\n\n" + fp if fp else "") + \
-        "\n\nStatus update only: no fare is below the threshold unless an alert email says so."
+    """Status email: one line per target plus where its lowest fare was seen. Nothing else."""
+    return "\n\n".join("\n".join([target_line(con, t), *lowest_fare_lines(con, t)]) for t in TARGETS)
 
 
 def status_email(con, dry_run: bool = False, now: datetime | None = None) -> dict:
