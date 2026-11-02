@@ -33,6 +33,7 @@ jobs:
       MAX_BOOKING_LOOKUPS: "1"  # keeps the trial inside SerpApi's free 250 searches/month
       GMAIL_TOKEN_FILE: secrets/gmail_token.json
       SERPAPI_API_KEY: ${{ secrets.SERPAPI_API_KEY }}
+      GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}  # preferred sender; OAuth token is the fallback
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4

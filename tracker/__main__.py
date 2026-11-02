@@ -38,7 +38,7 @@ def cmd_test_email(a):
     if a.dry_run:
         print(json.dumps({"status": "dry-run", "subject": subject}))
         return
-    res = mailer.GmailSender().send(subject, body)
+    res = mailer.default_sender().send(subject, body)
     print(json.dumps(res))
     sys.exit(0 if res["status"] in ("accepted", "delivered") else 1)
 
@@ -121,7 +121,7 @@ def main(argv=None):
         print(json.dumps(monitor.loop(DB_PATH, a.minutes, a.dry_run), default=str))
     elif a.cmd == "status-email" and a.test:
         subject, body = f"[TEST] Flight tracker status: {datetime.now(IST):%d %b %H:%M} IST", monitor.status_body(_con())
-        res = {"status": "dry-run"} if a.dry_run else mailer.GmailSender().send(subject, body)
+        res = {"status": "dry-run"} if a.dry_run else mailer.default_sender().send(subject, body)
         print(json.dumps({"subject": subject, "chars": len(body), **res}, ensure_ascii=False))
     elif a.cmd == "status-email":
         print(json.dumps(monitor.status_email(_con(), dry_run=a.dry_run), ensure_ascii=False))

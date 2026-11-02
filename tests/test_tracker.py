@@ -395,7 +395,7 @@ def test_actions_workflow_safe_and_hourly():
     wf = (ROOT / ".github/workflows/tracker.yml").read_text()
     assert "cancel-in-progress: false" in wf and "default: tick" in wf  # no overlap, daily tick is the default
     assert 'cron: "17 * * * *"' in wf and "timeout-minutes: 30" in wf
-    assert "${{ secrets.SERPAPI_API_KEY }}" in wf and "secrets.GMAIL_TOKEN_JSON" in wf  # secrets only via store
+    assert "${{ secrets.SERPAPI_API_KEY }}" in wf and "secrets.GMAIL_TOKEN_JSON" in wf and "secrets.GMAIL_APP_PASSWORD" in wf  # secrets only via store
     assert "gh workflow disable" in wf  # schedule stops after the campaign
     assert "git show origin/data:tracker.db" in wf and "wal_checkpoint" in wf  # history persists between runs
     assert "Start next loop" not in wf and '"campaign-ended"' in wf  # no long-running chain; stops after 30 Nov
@@ -538,3 +538,29 @@ def test_daily_late_morning_superseded_by_evening(tmp_path):
     daily, p, calls, kw = _daily_env(tmp_path, prices)
     r = daily.tick(p, True, now=_ist(2, 21, 0), **kw)
     assert r["did"] == ["check_pm: ok 4", "email 2026-11-02"] and len(calls) == 4  # one check, not two
+
+
+def test_app_password_preferred_and_smtp_statuses(monkeypatch):
+    import smtplib
+    monkeypatch.setenv("GMAIL_APP_PASSWORD", "abcd efgh ijkl mnop")
+    s = mailer.default_sender()
+    assert isinstance(s, mailer.SmtpSender) and s.password == "abcdefghijklmnop"
+    sent = []
+
+    class FakeSMTP:
+        def __init__(self, host, port, timeout):
+            assert (host, port) == ("smtp.gmail.com", 465)
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+        def login(self, user, pw):
+            if pw != "abcdefghijklmnop":
+                raise smtplib.SMTPAuthenticationError(535, b"bad")
+        def send_message(self, msg): sent.append(msg["Subject"])
+    monkeypatch.setattr(mailer.smtplib, "SMTP_SSL", FakeSMTP)
+    r = s.send("subj", "body")
+    assert r["status"] == "accepted" and sent == ["subj"]  # SMTP never claims 'delivered'
+    r = mailer.SmtpSender("wrong").send("subj", "body")
+    assert r["status"] == "failed" and "auth rejected" in r["error"]
+    monkeypatch.delenv("GMAIL_APP_PASSWORD")
+    monkeypatch.setattr(mailer, "GmailSender", lambda: "oauth")
+    assert mailer.default_sender() == "oauth"

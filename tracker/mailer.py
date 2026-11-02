@@ -1,6 +1,7 @@
 """Alert emails via the Gmail API (OAuth, gmail.send + gmail.metadata) with a persistent outbox."""
 import base64
 import os
+import smtplib
 import time
 from email.message import EmailMessage
 
@@ -116,6 +117,41 @@ class GmailSender:
             return "accepted"
 
 
+class SmtpSender:
+    """Gmail SMTP with an app password (does not expire like a Testing-mode OAuth token).
+
+    SMTP only confirms Gmail accepted the message, so the best status here is 'accepted', never 'delivered'.
+    """
+
+    def __init__(self, password: str):
+        self.password = password
+
+    def send(self, subject: str, body: str) -> dict:
+        msg = EmailMessage()
+        msg["To"] = msg["From"] = ALERT_TO
+        msg["Subject"] = subject
+        msg.set_content(body)
+        err = ""
+        for attempt in range(3):
+            try:
+                with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=30) as s:
+                    s.login(ALERT_TO, self.password)
+                    s.send_message(msg)
+                return {"status": "accepted", "id": msg["Message-ID"], "error": None}
+            except smtplib.SMTPAuthenticationError as e:
+                return {"status": "failed", "id": None, "error": f"smtp auth rejected ({e.smtp_code})"}  # no retry
+            except (smtplib.SMTPException, OSError) as e:
+                err = f"smtp: {type(e).__name__}"
+            time.sleep(2 ** attempt)
+        return {"status": "failed", "id": None, "error": err}
+
+
+def default_sender():
+    """App password when configured (long-lived), otherwise the OAuth token."""
+    pw = os.environ.get("GMAIL_APP_PASSWORD", "").replace(" ", "")
+    return SmtpSender(pw) if pw else GmailSender()
+
+
 def queue(con, idem_key: str, flight_key: str, kind: str, price, prev, subject: str, body: str) -> bool:
     """Insert an alert once; returns False if this exact event was already queued (idempotent)."""
     cur = con.execute("INSERT OR IGNORE INTO alerts (idem_key,flight_key,kind,price,prev_price,subject,body,status,"
@@ -134,7 +170,7 @@ def flush(con, sender=None, dry_run: bool = False) -> list[dict]:
             res = {"status": "dry-run", "id": None, "error": None}
         else:
             try:
-                sender = sender or GmailSender()
+                sender = sender or default_sender()
                 res = sender.send(r["subject"], r["body"])
             except Exception as e:  # missing/expired token: keep the alert pending for the next run
                 res = {"status": "failed", "id": None, "error": f"auth: {type(e).__name__}: {str(e)[:150]}"}
