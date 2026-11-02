@@ -162,6 +162,7 @@ class ChainSender:
                 res = {"status": "failed", "id": None, "error": f"{type(e).__name__}"}
             if res["status"] != "failed":
                 return res
+            print(f"sender {getattr(make, '__name__', 'smtp')} failed ({res['error']}); trying next", flush=True)
         return res
 
 
@@ -176,7 +177,7 @@ def default_sender():
                 f"other {sum(not (c.isalnum() and c.isascii()) for c in pw)}"  # shape only, never the value
         print(f"warning: GMAIL_APP_PASSWORD is not a 16-letter app password ({shape}); ignoring it", flush=True)
         return GmailSender()
-    return ChainSender(lambda: SmtpSender(pw), GmailSender)
+    return ChainSender(lambda: SmtpSender(pw), GmailSender)  # failures are logged by ChainSender
 
 
 def queue(con, idem_key: str, flight_key: str, kind: str, price, prev, subject: str, body: str) -> bool:
