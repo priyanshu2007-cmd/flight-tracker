@@ -5,6 +5,7 @@ import re
 import smtplib
 import time
 from email.message import EmailMessage
+from email.utils import make_msgid
 
 from .config import ALERT_TO, IST, THRESHOLD_INR
 from .db import ist, now
@@ -131,6 +132,7 @@ class SmtpSender:
         msg = EmailMessage()
         msg["To"] = msg["From"] = ALERT_TO
         msg["Subject"] = subject
+        msg["Message-ID"] = make_msgid(domain="gmail.com")
         msg.set_content(body)
         err = ""
         for attempt in range(3):
