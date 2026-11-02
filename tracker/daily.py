@@ -91,6 +91,9 @@ def tick(path: str = DB_PATH, dry_run: bool = DRY_RUN, now: datetime | None = No
         for kind, at in CHECKS.items():
             if now.time() < at or _done(con, today, kind):
                 continue
+            if kind == "check_am" and now.time() >= CHECKS["check_pm"]:
+                _mark(con, today, kind, "superseded by evening check")  # catch-up after 20:00: one check, not two
+                continue
             left = quota() if quota else sources.quota_left(os.environ.get("SERPAPI_API_KEY", ""))
             if kind == "check_am" and not _budget_allows_am(today, left):
                 _mark(con, today, kind, f"skipped to save quota ({left} left)")

@@ -531,3 +531,10 @@ def test_daily_ignores_completed_trial(tmp_path):
     monitor.start_trial(c)
     c.execute("UPDATE trial SET status='completed'")
     assert daily.tick(p, True, now=_ist(2, 8, 5), **kw)["did"] == ["check_am: ok 4"]
+
+
+def test_daily_late_morning_superseded_by_evening(tmp_path):
+    prices = {"A": 9485, "B": 9529, "C": 8986, "D": 8286, "now": _ist(2, 21, 0)}
+    daily, p, calls, kw = _daily_env(tmp_path, prices)
+    r = daily.tick(p, True, now=_ist(2, 21, 0), **kw)
+    assert r["did"] == ["check_pm: ok 4", "email 2026-11-02"] and len(calls) == 4  # one check, not two
