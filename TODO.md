@@ -31,10 +31,12 @@
 | 14c | DB snapshots | DONE | workflow uploads tracker.db artifact per run, 30-day retention |
 | 15 | Test email verified | DONE | `python -m tracker test-email` -> status delivered (message id 1a18455724f09d40), 2026-10-29 02:36 IST |
 | 16 | Real fares from a permitted source | DONE | run 40770119464 (dry-run): 37 fares; lowest A 9,485 / B 9,529 / C 8,986 / D 8,286 INR; Google Flights = verified |
+| 18 | Daily campaign 2-30 Nov | DONE | tracker/daily.py; hourly `tick` (cron :17); checks 08:00 + 20:00 IST, daily email 20:30 IST with each target's day-lowest + approved link; missed slots caught up, missed days emailed late; 52 tests pass; first real email delivered 2 Nov 23:36 IST (run 41497230740) |
+| 19 | Gmail token outlives 7-day Testing limit | BLOCKED | token expires ~5 Nov 02:56 IST; owner to choose app password / publish app / weekly re-auth |
 | 17 | Deploy + start 24 h trial | DONE | run 40770312379 (trial-start) succeeded; DB on data branch has trial row + 30 observations |
 
 ## Next recommended task
-Watch hourly runs (`gh run list -w tracker.yml`). After the trial ends, read the summary email and decide whether to continue (`gh workflow enable tracker.yml`, then `trial-start`) Gmail token expires ~5 Nov 02:35 IST: re-run `python -m tracker auth` and `gh secret set GMAIL_TOKEN_JSON < secrets/gmail_token.json` to extend.
+Resolve item 19 before 5 Nov 02:56 IST or daily emails stop. Watch `gh run list -w tracker.yml`.
 
 ## Trial state
-RUNNING. Started 2026-10-28T21:15:12Z (29 Oct 2026 02:45 IST). Ends 2026-10-29T21:15:12Z (30 Oct 2026 02:45 IST). Scheduled checks hourly at :03 via GitHub Actions; on the first run after the end time it emails the summary and disables the workflow.
+24 h trial COMPLETED 29-30 Oct (21 checks, 11 status + 1 summary email delivered). Daily campaign RUNNING 2-30 Nov; the workflow disables itself on the first tick after 30 Nov.
