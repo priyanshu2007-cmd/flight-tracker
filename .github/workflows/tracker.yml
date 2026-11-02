@@ -2,9 +2,11 @@ name: tracker
 
 on:
   schedule:
-    # Daily campaign to 30 Nov: each run is short (~1 min, ~720 min/month of the 2,000 free) and idempotent,
-    # so a late or skipped cron run is caught up by the next one.
+    # Daily campaign to 30 Nov: each run is short (~1 min; two a hour is ~1,350 of the 2,000 free minutes a month)
+    # and idempotent, so a late or dropped cron run is caught up by the next one. GitHub cron is best-effort,
+    # which is why there are two triggers an hour.
     - cron: "17 * * * *"
+    - cron: "47 * * * *"
   workflow_dispatch:
     inputs:
       command:
