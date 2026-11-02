@@ -7,7 +7,7 @@ import os
 from datetime import UTC, date, datetime, time, timedelta
 
 from . import db, mailer, monitor, sources
-from .config import DB_PATH, DRY_RUN, IST, TARGETS
+from .config import DB_PATH, DRY_RUN, IST, TARGETS, THRESHOLD_INR
 from .core import approved_url
 
 START, END = date(2026, 11, 2), date(2026, 11, 30)  # inclusive, IST
@@ -74,7 +74,7 @@ def email_body(con, day: date) -> tuple[str, str]:
         parts.append("\n".join(lines))
         short.append(f"{t.id} ₹{price:,}")
     subject = f"Flight prices {day:%d %b}: " + " · ".join(short)
-    note = ("\n\nAlerts below ₹7,500 are emailed separately as soon as a check sees them. "
+    note = (f"\n\nAlerts below {mailer.inr(THRESHOLD_INR)} are emailed separately as soon as a check sees them. "
             "Prices exclude checked baggage unless an alert says otherwise; confirm on the booking page.")
     return subject, "\n\n".join(parts) + note
 

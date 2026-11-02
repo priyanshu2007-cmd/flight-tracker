@@ -71,7 +71,7 @@ def main(argv=None):
     c.add_argument("--dry-run", action="store_true", default=DRY_RUN)
     t = sub.add_parser("test-email")
     t.add_argument("--dry-run", action="store_true")
-    s = sub.add_parser("simulate-drop", help="simulate a verified drop below 7,500 and email it")
+    s = sub.add_parser("simulate-drop", help="simulate a verified drop below the threshold and email it")
     s.add_argument("--dry-run", action="store_true")
     tr = sub.add_parser("trial-start")
     tr.add_argument("--hours", type=int, default=24)

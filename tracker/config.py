@@ -6,7 +6,7 @@ from decimal import Decimal
 from zoneinfo import ZoneInfo
 
 IST = ZoneInfo("Asia/Kolkata")
-THRESHOLD_INR = Decimal("7500")  # strict: price < threshold qualifies, per one-way ticket
+THRESHOLD_INR = Decimal("8000")  # strict: price < threshold qualifies, per one-way ticket
 # Smallest fall (INR) below the last alerted price that counts as a new drop. Default 1 = every real drop.
 MIN_DROP_INR = Decimal(os.environ.get("MIN_DROP_INR", "1"))
 ALERT_TO = os.environ.get("ALERT_TO", "spec.priyanshu@gmail.com")

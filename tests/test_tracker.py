@@ -62,8 +62,8 @@ def test_return_targets_exact_and_independent(con):
 
 # 5-6 threshold per ticket, strict
 def test_threshold_strict_per_ticket(con):
-    assert decide(None, Decimal("7499"))[0] is True
-    assert decide(None, Decimal("7500"))[0] is False
+    assert decide(None, Decimal("7999"))[0] is True
+    assert decide(None, Decimal("8000"))[0] is False
     assert len(run(con, [fare("B", "7499", fn="X1"), fare("C", "7499", fn="X1")])) == 2  # not summed
 
 
@@ -79,9 +79,9 @@ def test_first_then_drop_then_unchanged_then_increase(con):
 
 
 def test_above_then_below_alerts_and_recrossing(con):
-    assert run(con, [fare(price="8000")]) == []
+    assert run(con, [fare(price="8500")]) == []
     assert len(run(con, [fare(price="7200")])) == 1
-    run(con, [fare(price="7600")])
+    run(con, [fare(price="8100")])
     assert len(run(con, [fare(price="7200")])) == 1  # fell back below the threshold
 
 
@@ -104,7 +104,7 @@ def test_checked_bag_charge_added():
 
 
 def test_bag_charge_pushes_over_threshold_no_deal(con):
-    assert run(con, [fare(price="6800", checked=False, bag=Decimal("900"))]) == []
+    assert run(con, [fare(price="7300", checked=False, bag=Decimal("900"))]) == []  # 8,200 with the bag
 
 
 def test_unknown_baggage_is_lead_not_deal(con):

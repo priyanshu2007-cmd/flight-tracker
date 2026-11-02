@@ -1,11 +1,11 @@
 # Flight price tracker
 
 Monitors four one-way targets (BLR→LKO 23 Dec 2026 after 17:00 IST, BLR→LKO 24 Dec 2026, LKO→BLR 4 Jan 2027,
-LKO→BLR 5 Jan 2027) and emails `spec.priyanshu@gmail.com` on every genuine drop below ₹7,500 per ticket.
+LKO→BLR 5 Jan 2027) and emails `spec.priyanshu@gmail.com` on every genuine drop below ₹8,000 per ticket.
 It never books or pays. Spec: `FLIGHT_TRACKER_PROMPT.md`. Status and blockers: `TODO.md`.
 
 ## How it works
-- `tracker/sources.py` — SerpApi Google Flights API first (search + booking options for sub-₹7,500 fares, giving
+- `tracker/sources.py` — SerpApi Google Flights API first (search + booking options for sub-₹8,000 fares, giving
   seller price and baggage text). Agent Reach web reader (`curl https://r.jina.ai/URL`, its documented interface)
   is the fallback for the other approved sites. It checks robots.txt first, and a block, rate limit or page with no
   fares pauses that path for 24 h with no retry.
@@ -15,9 +15,9 @@ It never books or pays. Spec: `FLIGHT_TRACKER_PROMPT.md`. Status and blockers: `
   `delivered` = message reached INBOX (self-addressed), `accepted` = Gmail took it but INBOX not confirmed.
 
 ## Alert rules (defaults)
-- Price must be `< 7500` (strict), per one-way ticket and per target.
+- Price must be `< 8000` (strict), per one-way ticket and per target.
 - **Deal** email: seller price fetched this run and checked + cabin baggage verified. Price = fare + checked-bag fee.
-- **UNVERIFIED LEAD** email: price shown < ₹7,500 but baggage or seller price is unconfirmed. Separate state.
+- **UNVERIFIED LEAD** email: price shown < ₹8,000 but baggage or seller price is unconfirmed. Separate state.
 - Emails fire on the first qualifying price, on every new lower price (`MIN_DROP_INR`, default ₹1), and when a fare
   falls back below the threshold after rising above it. Unchanged prices and increases stay silent.
 - The same flight from two sources gets one email, and both observations are kept.
