@@ -540,11 +540,9 @@ def test_daily_late_morning_superseded_by_evening(tmp_path):
     assert r["did"] == ["check_pm: ok 4", "email 2026-11-02"] and len(calls) == 4  # one check, not two
 
 
-def test_app_password_preferred_and_smtp_statuses(monkeypatch):
+def test_app_password_preferred_validated_and_falls_back(monkeypatch):
     import smtplib
     monkeypatch.setenv("GMAIL_APP_PASSWORD", "abcd efgh ijkl mnop")
-    s = mailer.default_sender()
-    assert isinstance(s, mailer.SmtpSender) and s.password == "abcdefghijklmnop"
     sent = []
 
     class FakeSMTP:
@@ -557,10 +555,21 @@ def test_app_password_preferred_and_smtp_statuses(monkeypatch):
                 raise smtplib.SMTPAuthenticationError(535, b"bad")
         def send_message(self, msg): sent.append(msg["Subject"])
     monkeypatch.setattr(mailer.smtplib, "SMTP_SSL", FakeSMTP)
-    r = s.send("subj", "body")
-    assert r["status"] == "accepted" and sent == ["subj"]  # SMTP never claims 'delivered'
-    r = mailer.SmtpSender("wrong").send("subj", "body")
-    assert r["status"] == "failed" and "auth rejected" in r["error"]
+    oauth_sent = []
+
+    class FakeOAuth:
+        def send(self, subject, body):
+            oauth_sent.append(subject)
+            return {"status": "delivered", "id": "o1", "error": None}
+    monkeypatch.setattr(mailer, "GmailSender", FakeOAuth)
+    r = mailer.default_sender().send("subj", "body")
+    assert r["status"] == "accepted" and sent == ["subj"] and oauth_sent == []  # SMTP never says 'delivered'
+    assert mailer.SmtpSender("wrong").send("s", "b")["error"].startswith("smtp auth rejected")
+    # rejected password -> falls back to the OAuth token, email still goes out
+    monkeypatch.setattr(mailer.SmtpSender, "send", lambda self, s, b: {"status": "failed", "id": None, "error": "x"})
+    assert mailer.default_sender().send("subj2", "b")["status"] == "delivered" and oauth_sent == ["subj2"]
+    # malformed secret (e.g. wrong clipboard text with non-ASCII characters) is ignored, never used
+    monkeypatch.setenv("GMAIL_APP_PASSWORD", "x" * 160 + "\u2022" * 3)
+    assert isinstance(mailer.default_sender(), FakeOAuth)
     monkeypatch.delenv("GMAIL_APP_PASSWORD")
-    monkeypatch.setattr(mailer, "GmailSender", lambda: "oauth")
-    assert mailer.default_sender() == "oauth"
+    assert isinstance(mailer.default_sender(), FakeOAuth)

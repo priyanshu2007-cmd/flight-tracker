@@ -1,6 +1,7 @@
 """Alert emails via the Gmail API (OAuth, gmail.send + gmail.metadata) with a persistent outbox."""
 import base64
 import os
+import re
 import smtplib
 import time
 from email.message import EmailMessage
@@ -146,10 +147,33 @@ class SmtpSender:
         return {"status": "failed", "id": None, "error": err}
 
 
+class ChainSender:
+    """Try each sender in order; a failed one (bad password, outage, missing token) falls through to the next."""
+
+    def __init__(self, *makers):
+        self.makers = makers
+
+    def send(self, subject: str, body: str) -> dict:
+        res = {"status": "failed", "id": None, "error": "no sender configured"}
+        for make in self.makers:
+            try:
+                res = make().send(subject, body)
+            except Exception as e:  # e.g. missing OAuth token file
+                res = {"status": "failed", "id": None, "error": f"{type(e).__name__}"}
+            if res["status"] != "failed":
+                return res
+        return res
+
+
 def default_sender():
-    """App password when configured (long-lived), otherwise the OAuth token."""
+    """App password first (long-lived), with the OAuth token as fallback. A malformed secret is ignored."""
     pw = os.environ.get("GMAIL_APP_PASSWORD", "").replace(" ", "")
-    return SmtpSender(pw) if pw else GmailSender()
+    if not pw:
+        return GmailSender()
+    if not re.fullmatch(r"[a-z]{16}", pw):  # Google app passwords are exactly 16 lowercase letters
+        print("warning: GMAIL_APP_PASSWORD is not a 16-letter app password; ignoring it", flush=True)
+        return GmailSender()
+    return ChainSender(lambda: SmtpSender(pw), GmailSender)
 
 
 def queue(con, idem_key: str, flight_key: str, kind: str, price, prev, subject: str, body: str) -> bool:
