@@ -394,6 +394,7 @@ def test_timestamps_stored_utc(con):
 def test_actions_workflow_safe_and_hourly():
     wf = (ROOT / ".github/workflows/tracker.yml").read_text()
     assert "cancel-in-progress: false" in wf and "default: tick" in wf  # no overlap, daily tick is the default
+    assert 'cron: "47 * * * *"' in wf  # second trigger: cron is best-effort
     assert 'cron: "17 * * * *"' in wf and "timeout-minutes: 30" in wf
     assert "${{ secrets.SERPAPI_API_KEY }}" in wf and "secrets.GMAIL_TOKEN_JSON" in wf and "secrets.GMAIL_APP_PASSWORD" in wf  # secrets only via store
     assert "gh workflow disable" in wf  # schedule stops after the campaign
