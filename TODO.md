@@ -4,6 +4,7 @@
 - Sources approved: official airline sites, Google Flights, Skyscanner, MakeMyTrip, ixigo, Cleartrip.
 - Gmail: spec.priyanshu@gmail.com is sender and recipient. Gmail API OAuth; the owner clicks Allow. The owner asked
   for everything else to be automated.
+- Alert threshold changed by owner on 2026-11-02: strictly below ₹8,000 per one-way ticket (was ₹7,500 in the spec).
 - Baggage-unverified fares: send separate, clearly labelled UNVERIFIED LEAD emails.
 - Hosting: GitHub Actions hourly cron (owner chose this 2026-10-29 after GCP billing was found closed).
 - Flight Finder (affromero/flight-finder @636111d) rejected: stealth Playwright (webdriver hiding, random UA), VPN IP rotation, and LLM price extraction all break the spec.
