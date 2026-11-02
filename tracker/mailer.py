@@ -171,7 +171,10 @@ def default_sender():
     if not pw:
         return GmailSender()
     if not re.fullmatch(r"[a-z]{16}", pw):  # Google app passwords are exactly 16 lowercase letters
-        print("warning: GMAIL_APP_PASSWORD is not a 16-letter app password; ignoring it", flush=True)
+        shape = f"length {len(pw)}, lowercase {sum(c.islower() and c.isascii() for c in pw)}, " \
+                f"uppercase {sum(c.isupper() for c in pw)}, digits {sum(c.isdigit() for c in pw)}, " \
+                f"other {sum(not (c.isalnum() and c.isascii()) for c in pw)}"  # shape only, never the value
+        print(f"warning: GMAIL_APP_PASSWORD is not a 16-letter app password ({shape}); ignoring it", flush=True)
         return GmailSender()
     return ChainSender(lambda: SmtpSender(pw), GmailSender)
 
