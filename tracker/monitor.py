@@ -105,13 +105,13 @@ def collect(con, run_id: int, serp=sources.serpapi_fetch, reach=sources.agent_re
     return fares
 
 
-def run_once(path: str = DB_PATH, dry_run: bool = DRY_RUN, **kw) -> dict:
+def run_once(path: str = DB_PATH, dry_run: bool = DRY_RUN, ignore_trial: bool = False, **kw) -> dict:
     with run_lock(os.path.join(os.path.dirname(path) or ".", "run.lock")) as got:
         if not got:
             return {"status": "skipped", "reason": "another run is in progress"}
         con = db.connect(path)
         sources.seed_registry(con)
-        trial = con.execute("SELECT * FROM trial WHERE id=1").fetchone()
+        trial = None if ignore_trial else con.execute("SELECT * FROM trial WHERE id=1").fetchone()
         if trial and trial["status"] == "running" and datetime.now(UTC) >= datetime.fromisoformat(trial["ends_at"]):
             return {"status": "trial-ended", "summary": finish_trial(con, dry_run)}
         if not trial and os.environ.get("REQUIRE_TRIAL") == "1":

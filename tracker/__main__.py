@@ -82,6 +82,8 @@ def main(argv=None):
     se = sub.add_parser("status-email", help="email a trial progress summary (no searches)")
     se.add_argument("--dry-run", action="store_true", default=DRY_RUN)
     se.add_argument("--test", action="store_true", help="send one [TEST] copy now, no trial or slot needed")
+    tk = sub.add_parser("tick", help="daily campaign step (checks + daily email); safe to run any time")
+    tk.add_argument("--dry-run", action="store_true", default=DRY_RUN)
     lp = sub.add_parser("loop", help="run checks + status emails for up to N minutes (used by the workflow)")
     lp.add_argument("--minutes", type=int, default=330)
     lp.add_argument("--dry-run", action="store_true", default=DRY_RUN)
@@ -112,6 +114,9 @@ def main(argv=None):
             con.execute("INSERT OR IGNORE INTO target_state (target_id) VALUES (?)", (tid,))
             con.execute(f"UPDATE target_state SET {col}=? WHERE target_id=?", (val, tid))
         print(f"{a.cmd}: {a.target}; active targets: {sorted(db.active_targets(con))}")
+    elif a.cmd == "tick":
+        from . import daily
+        print(json.dumps(daily.tick(DB_PATH, a.dry_run), ensure_ascii=False, default=str))
     elif a.cmd == "loop":
         print(json.dumps(monitor.loop(DB_PATH, a.minutes, a.dry_run), default=str))
     elif a.cmd == "status-email" and a.test:

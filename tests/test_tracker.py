@@ -393,11 +393,12 @@ def test_timestamps_stored_utc(con):
 
 def test_actions_workflow_safe_and_hourly():
     wf = (ROOT / ".github/workflows/tracker.yml").read_text()
-    assert "cancel-in-progress: false" in wf and "default: loop" in wf  # no overlap, loop is the default
+    assert "cancel-in-progress: false" in wf and "default: tick" in wf  # no overlap, daily tick is the default
+    assert 'cron: "17 * * * *"' in wf and "timeout-minutes: 30" in wf
     assert "${{ secrets.SERPAPI_API_KEY }}" in wf and "secrets.GMAIL_TOKEN_JSON" in wf  # secrets only via store
-    assert "Trial: completed" in wf and "gh workflow disable" in wf  # schedule stops after the trial
+    assert "gh workflow disable" in wf  # schedule stops after the campaign
     assert "git show origin/data:tracker.db" in wf and "wal_checkpoint" in wf  # history persists between runs
-    assert "Start next loop" in wf and "steps.loop.outcome == 'success'" in wf  # self-chaining, no crash spin
+    assert "Start next loop" not in wf and '"campaign-ended"' in wf  # no long-running chain; stops after 30 Nov
     assert "upload-artifact" in wf and "retention-days: 30" in wf  # point-in-time backups
 
 
@@ -453,3 +454,80 @@ def test_status_body_is_compact_with_approved_link(con):
     assert "no fares observed yet" in body  # targets C and D have no data
     for noise in ("Source ", "Alerts:", "FLIGHTPOWERS", "Runs:", "Trial:"):
         assert noise not in body
+
+
+# daily campaign (2-30 Nov 2026)
+def _ist(d, hh, mm=0):
+    return datetime(2026, 11, d, hh, mm, tzinfo=IST)
+
+
+def _daily_env(tmp_path, prices):
+    """serp returns one fare per target, priced from the `prices` dict (mutable between ticks)."""
+    from tracker import daily
+    p = str(tmp_path / "d.db")
+    calls = []
+
+    def serp(t):
+        calls.append(t.id)
+        dep_h = 18 if t.id == "A" else 9
+        f = fare(t.id, str(prices[t.id]), hh=dep_h, fn=f"6E {t.id}1")
+        f.observed_at = prices["now"]
+        return "ok", [f], None
+    kw = dict(serp=serp, reach=lambda u: ("blocked", [], "x"), quota=lambda: 200)
+    return daily, p, calls, kw
+
+
+def test_daily_two_checks_and_one_email_per_day(tmp_path):
+    prices = {"A": 9485, "B": 9529, "C": 8986, "D": 8286, "now": _ist(2, 8, 5)}
+    daily, p, calls, kw = _daily_env(tmp_path, prices)
+    assert daily.tick(p, True, now=_ist(2, 7, 0), **kw)["did"] == []          # before 08:00: nothing
+    r = daily.tick(p, True, now=_ist(2, 8, 5), **kw)
+    assert r["did"] == ["check_am: ok 4"] and len(calls) == 4
+    assert daily.tick(p, True, now=_ist(2, 9, 0), **kw)["did"] == []          # am already done
+    prices.update(D=8100, now=_ist(2, 20, 2))
+    r = daily.tick(p, True, now=_ist(2, 20, 2), **kw)
+    assert r["did"] == ["check_pm: ok 4"]                                    # email not before 20:30
+    r = daily.tick(p, True, now=_ist(2, 20, 31), **kw)
+    assert r["did"] == ["email 2026-11-02"] and r["sent"][0]["status"] == "dry-run"
+    assert daily.tick(p, True, now=_ist(2, 22, 0), **kw)["did"] == []         # once per day
+    c = db.connect(p)
+    subj, body = c.execute("SELECT subject, body FROM alerts WHERE kind='daily'").fetchone()
+    assert subj == "Flight prices 02 Nov: A ₹9,485 · B ₹9,529 · C ₹8,986 · D ₹8,100"
+    assert "Target D LKO->BLR 05 Jan 2027: today's lowest ₹8,100" in body       # day's lowest of both checks
+    assert "Link: https://www.goindigo.in" in body and "after 17:00" in body
+
+
+def test_daily_change_vs_yesterday_and_late_catch_up(tmp_path):
+    prices = {"A": 9485, "B": 9529, "C": 8986, "D": 8286, "now": _ist(2, 20, 1)}
+    daily, p, _, kw = _daily_env(tmp_path, prices)
+    daily.tick(p, True, now=_ist(2, 20, 1), **kw)
+    prices.update(D=7900, B=9600, now=_ist(3, 8, 1))
+    r = daily.tick(p, True, now=_ist(3, 8, 1), **kw)  # 2 Nov's email never went out: sent late, then 3 Nov check
+    assert "email 2026-11-02" in r["did"]
+    prices["now"] = _ist(3, 20, 1)
+    daily.tick(p, True, now=_ist(3, 20, 40), **kw)
+    c = db.connect(p)
+    rows = c.execute("SELECT subject, body FROM alerts WHERE kind='daily' ORDER BY id").fetchall()
+    assert rows[0][0].startswith("[late] Flight prices 02 Nov")
+    assert "₹7,900 (down ₹386 vs yesterday)" in rows[1][1] and "₹9,600 (up ₹71 vs yesterday)" in rows[1][1]
+
+
+def test_daily_quota_guard_and_campaign_end(tmp_path):
+    from tracker import daily
+    assert daily._budget_allows_am(date(2026, 11, 29), 12) is True   # 2 days left: 8 + 4 needed
+    assert daily._budget_allows_am(date(2026, 11, 2), 100) is False  # 29 days x 4 + 4 > 100: evening only
+    assert daily._budget_allows_am(date(2026, 11, 2), None) is True  # unknown quota: proceed
+    prices = {"A": 9485, "B": 9529, "C": 8986, "D": 8286, "now": _ist(2, 8, 5)}
+    _, p, calls, kw = _daily_env(tmp_path, prices)
+    kw["quota"] = lambda: 50
+    assert daily.tick(p, True, now=_ist(2, 8, 5), **kw)["did"] == ["check_am: skipped (quota 50)"] and calls == []
+    assert daily.tick(p, True, now=datetime(2026, 12, 1, 9, 0, tzinfo=IST))["status"] == "campaign-ended"
+
+
+def test_daily_ignores_completed_trial(tmp_path):
+    prices = {"A": 9485, "B": 9529, "C": 8986, "D": 8286, "now": _ist(2, 8, 5)}
+    daily, p, calls, kw = _daily_env(tmp_path, prices)
+    c = db.connect(p)
+    monitor.start_trial(c)
+    c.execute("UPDATE trial SET status='completed'")
+    assert daily.tick(p, True, now=_ist(2, 8, 5), **kw)["did"] == ["check_am: ok 4"]
